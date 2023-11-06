@@ -4,6 +4,7 @@
 FROM alpine/git:2.36.2 as download
 
 COPY builder/clone.sh /clone.sh
+COPY models/model.safetensors /model.safetensors
 
 # Clone the repos and clean unnecessary files
 RUN . /clone.sh taming-transformers https://github.com/CompVis/taming-transformers.git 24268930bf1dce879235a7fddd0b2355b84d7ea6 && \
@@ -20,8 +21,7 @@ RUN . /clone.sh BLIP https://github.com/salesforce/BLIP.git 48211a1594f1321b00f1
     . /clone.sh clip-interrogator https://github.com/pharmapsychotic/clip-interrogator 2486589f24165c8e3b303f84e9dbbea318df83e8 && \
     . /clone.sh generative-models https://github.com/Stability-AI/generative-models 45c443b316737a4ab6e40413d7794a7f5657c19f
 
-RUN apk add --no-cache wget && \
-    wget -q -O /model.safetensors --user 'sandy@stakeordie.com' --password 'ZUM2drp4vqj3xbn!ezm' https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors
+RUN apk add --no-cache wget 
 
 
 
@@ -45,7 +45,7 @@ RUN export TORCH_COMMAND='pip install --pre torch torchvision torchaudio --extra
 
 RUN apt-get update && \
     apt install -y \
-    fonts-dejavu-core rsync git jq moreutils aria2 wget libgoogle-perftools-dev procps libgl1 libglib2.0-0 && \
+    fonts-dejavu-core rsync git jq moreutils aria2 wget libgoogle-perftools-dev procps libgl1 libglib2.0-0  && \
     apt-get autoremove -y && rm -rf /var/lib/apt/lists/* && apt-get clean -y
 
 RUN --mount=type=cache,target=/cache --mount=type=cache,target=/root/.cache/pip \
@@ -73,7 +73,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 ADD src .
 
 COPY builder/cache.py /stable-diffusion-webui/cache.py
-RUN cd /stable-diffusion-webui && python cache.py --use-cpu=all --ckpt /model.safetensors
+RUN cd /stable-diffusion-webui && python cache.py --use-cpu=all --ckpt /model.safetensors --no-half
 
 # Cleanup section (Worker Template)
 RUN apt-get autoremove -y && \
